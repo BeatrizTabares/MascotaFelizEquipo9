@@ -1,3 +1,4 @@
+import { service } from '@loopback/core';
 import {
   Count,
   CountSchema,
@@ -19,11 +20,15 @@ import {
 } from '@loopback/rest';
 import {Usuario} from '../models';
 import {UsuarioRepository} from '../repositories';
+import { AutenticacionService } from '../services';
+const fetch = require('node-fetch'); // npm install node-fetch --save
 
 export class UsuarioController {
   constructor(
     @repository(UsuarioRepository)
     public usuarioRepository : UsuarioRepository,
+    @service(AutenticacionService)
+    public servicioAutenticacion : AutenticacionService
   ) {}
 
   @post('/usuarios')
@@ -44,7 +49,20 @@ export class UsuarioController {
     })
     usuario: Omit<Usuario, 'id'>,
   ): Promise<Usuario> {
-    return this.usuarioRepository.create(usuario);
+    let clave = this.servicioAutenticacion.GenerarClave(); // Generamos una clave aleatoria
+    let claveCifrada = this.servicioAutenticacion.CifrarClave(clave); // Ciframos la clave generada
+    usuario.contrasena = claveCifrada; // Asignamos la clave cifrada a la persona
+    let p = await this.usuarioRepository.create(usuario);
+
+    //Notificacion al usuario
+    let destino = usuario.correo;
+    let asunto = 'Registro en plataforma de mascotas';
+    let contenido = `Hola ${usuario.nombre} su usuario es ${usuario.correo} y su clave es ${clave}`;
+    fetch(`http://127.0.0.1:5000/email?destino=${destino}&asunto=${asunto}&contenido=${contenido}`)
+       .then((data:any)=>{
+        console.log(data);
+       })
+    return p;  
   }
 
   @get('/usuarios/count')
