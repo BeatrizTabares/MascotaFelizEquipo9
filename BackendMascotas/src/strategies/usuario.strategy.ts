@@ -8,8 +8,8 @@ import parseBearerToken from 'parse-bearer-token';
 
 
 
-//Clase para el administrador
-export class EstrategiaAdministrador implements AuthenticationStrategy {
+//Clase para el usuario
+export class EstrategiaUsuario implements AuthenticationStrategy {
   name: string = 'admin';
 
   constructor(
@@ -38,4 +38,4 @@ export class EstrategiaAdministrador implements AuthenticationStrategy {
     }
   }  
     
-} 
+}

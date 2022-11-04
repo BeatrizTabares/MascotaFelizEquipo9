@@ -10,8 +10,9 @@ import {RestApplication} from '@loopback/rest';
 import {ServiceMixin} from '@loopback/service-proxy';
 import path from 'path';
 import {MySequence} from './sequence';
-import {EstrategiaAdministrador, EstrategiaAsesor, EstrategiaUsuario} from './strategies/admin.strategy';
-
+import {EstrategiaAdministrador} from './strategies/admin.strategy';
+import { EstrategiaAsesor } from './strategies/asesor.strategy';
+import { EstrategiaUsuario } from './strategies/usuario.strategy';
 export {ApplicationConfig};
 
 export class App extends BootMixin(
