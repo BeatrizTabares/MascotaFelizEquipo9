@@ -1,30 +1,29 @@
+import {service} from '@loopback/core';
 import {
   Count,
   CountSchema,
   Filter,
   FilterExcludingWhere,
   repository,
-  Where,
+  Where
 } from '@loopback/repository';
 import {
-  post,
-  param,
-  get,
-  getModelSchemaRef,
-  patch,
-  put,
-  del,
-  requestBody,
-  response,
+  del, get,
+  getModelSchemaRef, param, patch, post, put, requestBody,
+  response
 } from '@loopback/rest';
 import {Usuario} from '../models';
 import {UsuarioRepository} from '../repositories';
+import {AutenticacionService} from '../services';
+const fetch = require('node-fetch');//Importar el node-fetch instalado
 
 export class UsuarioController {
   constructor(
     @repository(UsuarioRepository)
-    public usuarioRepository : UsuarioRepository,
-  ) {}
+    public usuarioRepository: UsuarioRepository,
+    @service(AutenticacionService)// Inyección del servicio creado en autenticacion.service
+    public servicioAutenticacion: AutenticacionService
+  ) { }
 
   @post('/usuarios')
   @response(200, {
@@ -44,7 +43,21 @@ export class UsuarioController {
     })
     usuario: Omit<Usuario, 'id'>,
   ): Promise<Usuario> {
-    return this.usuarioRepository.create(usuario);
+    let Contrasena = this.servicioAutenticacion.generarContrasena();//Genera clave aleatoria
+    let contrasenaCifrada = this.servicioAutenticacion.cifrarContrasena(Contrasena);//Cifra la clave aleatoria
+    usuario.Contrasena = contrasenaCifrada;//Asigna la clave cifrada a la persona
+    let p = await this.usuarioRepository.create(usuario);//Variable que vuelve asincrónica la función para que el return espere
+
+    //Notificar al usuario
+    let destino = usuario.Correo;
+    let asunto = 'Registro en la plataforma de mascotas';
+    let contenido = `Hola ${usuario.Nombre},su usuario es: ${usuario.Correo}, y su contraseña es ${Contrasena}`;
+    fetch(`http://127.0.0.1:5000/Correo?correo-destino=${destino}&asunto=${asunto}&contenido=${contenido}`)
+      .then((data: any) => {
+        console.log(data);
+      })
+    return p;
+
   }
 
   @get('/usuarios/count')
